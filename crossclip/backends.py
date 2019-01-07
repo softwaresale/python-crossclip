@@ -31,6 +31,8 @@ import sys
 # adding fallback support to use pb(copy|paste) as a backup.
 # On windows, use the win32clipboard module. If that's not found, then
 # no dice.
+global BACKEND_TO_USE
+BACKEND_TO_USE = ''
 if sys.platform == 'linux':
     try:
         # Try to import GTK first.
@@ -39,7 +41,8 @@ if sys.platform == 'linux':
         from gi.repository import Gtk
         from gi.repository import Gdk
         from gi.repository import GdkPixbuf
-        from gi.repository import GLib
+        from gi.repository import GLib 
+        BACKEND_TO_USE = 'gtk'
     except ModuleNotFoundError:
         # if Gtk is not found, then try to import pyqt
         try:
@@ -47,17 +50,23 @@ if sys.platform == 'linux':
             from PyQt5.QtGui import QImage
             from PyQt5.Qt import QBuffer
             import PyQt5
+        
+            BACKEND_TO_USE = 'qt'
         except ModuleNotFoundError:
             raise RuntimeError("You have neither Qt or GTK installed. Please install either PyGobject or PyQt5")
 elif sys.platform == 'darwin':
     try:
         # Try getting PyObjC
         from AppKit import NSPasteboard, NSStringPboardType
+        
+        BACKEND_TO_USE = 'darwin'
     except ModuleNotFoundError:
         raise RuntimeError("You need PyObjC if you are running on mac")
 elif sys.platform == 'win32':
     try:
         import win32clipboard
+        
+        BACKEND_TO_USE = 'win32'
     except ModuleNotFoundError:
         raise RuntimeError("You need pywin32 to run on windows")
 else:
@@ -161,6 +170,14 @@ class GtkBackend(BaseBackend):
         w, h = image.size
         data = GLib.Bytes.new(data)
         pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
+
+    @staticmethod
+    def get_native_image_str():
+        return 'gdk'
+
+    @staticmethod
+    def get_native_image_type():
+        return GdkPixbuf.Pixbuf
 
     def __init__(self, display=None):
         """ Constructs a new object
@@ -296,6 +313,14 @@ class QtBackend(BaseBackend):
         # PIL.Image
         qimg = PilImageQt(image)
         return qimg
+
+    @staticmethod
+    def get_native_image_str():
+        return 'qt'
+
+    @staticmethod
+    def get_native_image_type():
+        return QImage
 
     def __init__(self):
         """ Constructs a new object
