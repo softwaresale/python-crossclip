@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# BaseBackend.py -- base class for all backends
+# backends.py -- backend classes
 
 import sys
 
@@ -44,6 +44,8 @@ if sys.platform == 'linux':
         # if Gtk is not found, then try to import pyqt
         try:
             from PyQt5.Qt import QApplication, QClipboard
+            from PyQt5.QtGui import QImage
+            from PyQt5.Qt import QBuffer
             import PyQt5
         except ModuleNotFoundError:
             raise RuntimeError("You have neither Qt or GTK installed. Please install either PyGobject or PyQt5")
@@ -62,6 +64,8 @@ else:
     raise RuntimeError('Your platform is not supported')
 
 from PIL import Image as PilImage
+from PIL import ImageQt as PilImageQt
+import io
 
 class BaseBackend(object):
     """ Interface for all clipboard backends
@@ -111,7 +115,7 @@ class BaseBackend(object):
         """
         raise NotImplementedError
 
-    def set_image(self, img):
+    def set_image(self, img, format='pil'):
         """ Synchronously sets image
 
         Preform a blocking call to set image on the clipboard
@@ -170,7 +174,7 @@ class GtkBackend(BaseBackend):
         """
         if display is None:
             display = Gdk.Display.get_default()
-        BaseBackend.__init__(self)
+        super().__init__()
         self.clipboard = Gtk.Clipboard.get_default(display)
 
     def get_text(self):
@@ -252,3 +256,121 @@ class GtkBackend(BaseBackend):
             raise RuntimeWarning('Invalid image format')
             return None
 
+class QtBackend(BaseBackend):
+    """ Backend for Qt clipboard
+
+    This class backends the default Qt Clipboard
+    """
+
+    @staticmethod
+    def qimage_to_image(qimage):
+        """ Converts QtGui.QImage to PIL.Image
+
+        This functions converts a Qt Image to a PIL Image class
+
+        Params
+        ------
+        qimage : QtGui.QImage
+            Image to be converted
+        """
+        buf = QBuffer()
+        buf.open(QBuffer.ReadWrite)
+        qimage.save(buf, 'PNG') # TODO: make this dynamic
+        pimage = PilImage.open(io.BytesIO(buf.data()))
+        return pimage
+
+    @staticmethod
+    def image_to_qimage(image):
+        """ Converts PIL.Image to QtGui.QImage
+
+        This converts a PIL Image to a Qt Image.
+
+        Params
+        ------
+        image : PIL.Image
+            Image to be converted
+        """
+        # Although there is already a module that does this,
+        # this function exists for consistency. Each backend
+        # should convert from its native Image type to a 
+        # PIL.Image
+        qimg = PilImageQt(image)
+        return qimg
+
+    def __init__(self):
+        """ Constructs a new object
+
+        Constructs a new object and sets the internal clipboard
+        """
+        # Get the default application. I am ignoring any sort
+        # of signal/slot setup. This will all be based off of user
+        # actions
+        super().__init__()
+        self.clipboard = QApplication.clipboard()
+
+    def get_text(self):
+        """ Gets text from the clipboard
+
+        This preforms a blocking call to recieve text from the clipboard.
+        
+        Returns
+        -------
+        str or None
+            String gotten from the clipboard
+        """
+        return self.clipboard.text()
+
+    def get_image(self, format='pil'):
+        """ Gets image from the clipboard
+
+        Preforms a blocking call to recieve an image from the clipboard.
+        Can return either PIL.Image or QtGui.QImage
+
+        Params
+        ------
+        format : str, optional
+            Type of image to be returned. 'pil' or PIL.Image, 'qt' for
+            QtGui.QImage
+        """
+        img = self.clipboard.image()
+        if format == 'qt':
+            return img
+        elif format == 'pil':
+            return QtBackend.qimage_to_image(img)
+        else:
+            raise RuntimeWarning('Image format is not supported')
+            return None
+
+    def set_text(self, text):
+        """ Puts text on the clipboard
+
+        This preforms a blocking call to place text on the clipboard.
+        
+        Params
+        ------
+        text : str
+            String to put on the clipboard
+        """
+        self.clipboard.setText(text)
+
+    def set_image(self, image, format='pil'):
+        """ Sets an image on the clipboard
+
+        Preforms a blocking call to set an image on the clipboard.
+        Can return either PIL.Image or QtGui.QImage
+
+        Params
+        ------
+        format : str, optional
+            Type of image to be returned. 'pil' or PIL.Image, 'qt' for
+            QtGui.QImage
+        """
+        if format == 'qt':
+            self.clipboard.setImage(image)
+        elif format == 'pil':
+            qimg = QtBackend.image_to_qimage(image)
+            self.clipboard.setImage(qimg)
+        else:
+            raise RuntimeWarning('Image format is not supported')
+            return None
+    
