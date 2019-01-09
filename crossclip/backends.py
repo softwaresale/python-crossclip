@@ -58,7 +58,8 @@ elif sys.platform == 'darwin':
     try:
         # Try getting PyObjC
         from AppKit import NSPasteboard, NSStringPboardType
-        
+        from PIL import ImageGrab as PilImageGrab
+
         BACKEND_TO_USE = 'darwin'
     except ModuleNotFoundError:
         raise RuntimeError("You need PyObjC if you are running on mac")
@@ -66,6 +67,7 @@ elif sys.platform == 'win32':
     try:
         import win32clipboard
         from cStringIO import StringIO
+        from PIL import ImageGrab as PilImageGrab
         
         BACKEND_TO_USE = 'win32'
     except ModuleNotFoundError:
@@ -75,7 +77,6 @@ else:
 
 from PIL import Image as PilImage
 from PIL.ImageQt import ImageQt as PilImageQt
-from PIL import ImageGrab as PilImageGrab
 import io
 
 class BaseBackend(object):
@@ -250,7 +251,7 @@ class GtkBackend(BaseBackend):
             Length of text to copy to clipboard
         """
         # Assuming that all text is to be copied over
-        self.clipboard.set_text(self, text, num)
+        self.clipboard.set_text(text, num)
     
     def set_image(self, image, format='pil'):
         """ Synchronously sets image
