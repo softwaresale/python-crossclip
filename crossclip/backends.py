@@ -173,6 +173,7 @@ class GtkBackend(BaseBackend):
         w, h = image.size
         data = GLib.Bytes.new(data)
         pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
+        return pix
 
     @staticmethod
     def get_native_image_str():
@@ -492,4 +493,3 @@ class WindowsBackend(BaseBackend):
 
         win32clipboard.EmptyClipboard()
         win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    

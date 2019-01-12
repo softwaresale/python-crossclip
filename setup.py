@@ -7,7 +7,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name="crossclip",
-    version="0.0.1",
+    version="0.1.0",
     author="Charlie Sale",
     author_email="softwaresale01@gmail.com",
     description="A Cross Platform clipboard manager",
@@ -15,6 +15,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/softwaresale/crossclip",
     packages=setuptools.find_packages(),
+    install_requires=[
+        'Pillow',
+    ],
+    test_suite='nose.collector',
+    tests_require=['nose', 'numpy'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
