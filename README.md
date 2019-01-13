@@ -17,7 +17,7 @@ Qt-Based desktop environments for GNU/Linux. More environments can be added.
 ### Dependencies
 
 #### All systems
-* Pillow ()
+* Pillow (5.4.0)
 
 #### Linux
 * Gtk users: PyGObject
