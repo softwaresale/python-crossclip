@@ -48,7 +48,7 @@ class Clipboard:
             self.backend_type = GtkBackend
         elif BACKEND_TO_USE == 'qt':
             self.backend = QtBackend()
-            self.backend_type = GtkBackend
+            self.backend_type = QtBackend
         elif BACKEND_TO_USE == 'win32':
             self.backend = WindowsBackend()
             self.backend_type = WindowsBackend

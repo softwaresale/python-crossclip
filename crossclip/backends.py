@@ -18,6 +18,7 @@
 # backends.py -- backend classes
 
 import sys
+import os
 
 # Do some cross-platform importing. This module does not support
 # cygwin. 
@@ -34,7 +35,9 @@ import sys
 global BACKEND_TO_USE
 BACKEND_TO_USE = ''
 if sys.platform == 'linux':
-    try:
+    # Get current desktop
+    current_desktop = os.environ.get('XDG_CURRENT_DESKTOP')
+    if current_desktop in ['MATE', 'GNOME', 'X-Cinnamon', 'LXDE', 'XFCE', 'Unity']:
         # Try to import GTK first.
         import gi
         gi.require_version('Gtk', '3.0')
@@ -43,17 +46,13 @@ if sys.platform == 'linux':
         from gi.repository import GdkPixbuf
         from gi.repository import GLib 
         BACKEND_TO_USE = 'gtk'
-    except ModuleNotFoundError:
-        # if Gtk is not found, then try to import pyqt
-        try:
-            from PyQt5.Qt import QApplication, QClipboard
-            from PyQt5.QtGui import QImage
-            from PyQt5.Qt import QBuffer
-            import PyQt5
-        
-            BACKEND_TO_USE = 'qt'
-        except ModuleNotFoundError:
-            raise RuntimeError("You have neither Qt or GTK installed. Please install either PyGobject or PyQt5")
+    elif current_desktop in ['LXQt', 'KDE', ]:
+        from PyQt5.Qt import QApplication, QClipboard, QBuffer
+        from PyQt5.QtGui import QImage, QPixmap
+        import PyQt5
+        BACKEND_TO_USE = 'qt'
+    else:
+        raise RuntimeError('Not using a GTK or Qt-based Desktop')
 elif sys.platform == 'darwin':
     try:
         # Try getting PyObjC
@@ -335,7 +334,8 @@ class QtBackend(BaseBackend):
         # of signal/slot setup. This will all be based off of user
         # actions
         super().__init__()
-        self.clipboard = QApplication.clipboard()
+        self.app = QApplication([])
+        self.clipboard = self.app.clipboard()
 
     def get_text(self):
         """ Gets text from the clipboard
