@@ -45,6 +45,7 @@ if sys.platform == 'linux':
         from gi.repository import Gdk
         from gi.repository import GdkPixbuf
         from gi.repository import GLib 
+        import array
         BACKEND_TO_USE = 'gtk'
     elif current_desktop in ['LXQt', 'KDE', ]:
         from PyQt5.Qt import QApplication, QClipboard, QBuffer
@@ -168,10 +169,10 @@ class GtkBackend(BaseBackend):
 
         This converts a PIL Image to Gdk Pixbuf
         """
-        data = image.tobytes()
+        olddata = image.tobytes()
         w, h = image.size
-        data = GLib.Bytes.new(data)
-        pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
+        data = GLib.Bytes.new(olddata)
+        pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, True, 8, w, h, w * 3)
         return pix
 
     @staticmethod
