@@ -17,12 +17,16 @@
 
 # gtkbackend.py -- Defines GTK backend
 
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
-from gi.repository import GdkPixbuf
-from gi.repository import GLib
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+    from gi.repository import GdkPixbuf
+    from gi.repository import GLib
+except ModuleNotFoundError:
+    print("pygobject cannot be found. Please install the pip package: 'pygobject'")
+
 from PIL import Image as PilImage
 from io import BytesIO
 
