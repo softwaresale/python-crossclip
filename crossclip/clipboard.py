@@ -18,12 +18,8 @@
 # clipboard.py -- frontend clipboard class
 
 import sys
-from .backends import (
-    BACKEND_TO_USE,
-    GtkBackend,
-    QtBackend,
-    WindowsBackend,
-)
+from . import platform_backend, backends
+import PIL
 
 class Clipboard:
     """ Frontend to various clipboard backends
@@ -34,101 +30,62 @@ class Clipboard:
     """
     backend_type = None
     backend = None
-    image_type = None
-    image_str = None
+    image_converter = None
 
-    def __init__(self):
-        """ Constructs a new object and chooses the backend
-
-        The backend is choosen automatically based on the host platform.
+    def __init__(self, clip_backend=platform_backend):
         """
-        # Choose the backend based off of BACKEND_TO_USE
-        if BACKEND_TO_USE == 'gtk':
-            self.backend = GtkBackend()
-            self.backend_type = GtkBackend
-        elif BACKEND_TO_USE == 'qt':
-            self.backend = QtBackend()
-            self.backend_type = QtBackend
-        elif BACKEND_TO_USE == 'win32':
-            self.backend = WindowsBackend()
-            self.backend_type = WindowsBackend
-        elif BACKEND_TO_USE == 'darwin':
-            pass
-        else:
-            raise RuntimeError('Invalid backend')
+        Creates a new clipboard that interfaces one of the platform-specific
+        backends. The backend is implicitly deduced, but a specific backend
+        can be choosen instead.
+        :param clip_backend: Which backend to use. Defaults to implicitly-selected backend
+        :raises RuntimeError: If clip_backend is invalid
+        """
+        # Choose the backend to use
+        if clip_backend not in backends:
+            raise RuntimeError('Invalid backend selected')
+
+        self.backend = backends[clip_backend]
+        self.backend_type = clip_backend
 
         # Based off of backend, get the native image type (e.g QImage)
-        self.image_str = self.backend.get_native_image_str()
-        self.image_type = self.backend.get_native_image_type()
+        self.image_converter = self.backend.image_converter
 
-    def get_text(self):
-        """ Synchronously gets text from the clipboard
-
-        This gets the first string from the text and returns it
-        to the user
-
-        Returns
-        -------
-        str or None
-            Text from clipboard
+    def get_text(self) -> str:
+        """
+        Gets text from the clipboard.
+        :returns str: Text from clipboard or None if no text is available
         """
         return self.backend.get_text()
 
     def get_image(self, native=False):
-        """ Synchronously gets image from the clipboard
-
-        This gets the first image from the text and returns it
-        to the user. There are a few different formats available.
-        All backends support PIL.Image. GtkBackend supports GdkPixbuf.Pixbuf.
-        QtBackend supports QtGui.QImage. If you are unsure which to use,
-        the frontend property `image_str` will tell you which special image
-        type to use.
-
-        Params
-        ------
-        native : boolean, optional
-            If true, then use native image type. False by default
-
-        Returns
-        -------
-        PIL.Image, image_type, or None
-            Image from clipboard
+        """
+        Gets an image from the clipboard.
+        :param native: If true, then the returned image will be of type `self.image_converter.image_type`.
+                        If False, then object will be of type `PIL.Image`.
+        :returns `PIL.Image` or `self.image_converter.image_type`: Initialized image object or None if no image is available
         """
         if native is True:
-            return self.backend.get_image(format=self.image_str)
+            return self.backend.get_image(format=self.image_converter.image_str)
         else:
             return self.backend.get_image()
 
-    def set_text(self, text):
-        """ Synchronously gets text from the clipboard
-
-        Puts text on the clipboard
-
-        Params
-        ------
-        text : str
-            String to put onto clipboard
+    def set_text(self, text: str):
+        """
+        Places text on the clipboard.
+        :param text: Text to add
         """
         self.backend.set_text(text)
 
-    def set_image(self, image, native=False):
-        """ Synchronously gets image from the clipboard
-
-        Puts image on clipboard. Image can be of a few different
-        types. All images can be PIL.Image or whatever native
-        image type is supported by the backend. Consult the property
-        image_str or image_type to determine the native image type
-        for the backend.
-
-        Params
-        ------
-        image : PIL.Image, image_type
-            Image to put onto clipboard
-
-        native : boolean, optional
-            True if image is of native type. False if PIL.Image for default
+    def set_image(self, image):
         """
-        if native is True:
-            self.backend.set_image(image, format=self.image_str)
-        else:
+        Sets an image on the clipboard. Image can either be of type `PIL.Image` or
+        `self.image_converter.image_str`.
+        :param image: image to be placed.
+        :raises RuntimeError: If image is neither of type `PIL.Image` nor `self.image_converter.image_type`
+        """
+        if isinstance(image, self.image_converter.image_type):
+            self.backend.set_image(image, format=self.image_converter.image_str)
+        elif isinstance(image, PIL.Image):
             self.backend.set_image(image)
+        else:
+            raise RuntimeError('Image must be of type `PIL.Image` or `self.image_converter.image_str`')
