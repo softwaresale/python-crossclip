@@ -85,7 +85,7 @@ class Clipboard:
         """
         if isinstance(image, self.image_converter.image_type):
             self.backend.set_image(image, format=self.image_converter.image_str)
-        elif isinstance(image, PIL.Image):
+        elif isinstance(image, PIL.Image.Image):
             self.backend.set_image(image)
         else:
             raise RuntimeError('Image must be of type `PIL.Image` or `self.image_converter.image_str`')
