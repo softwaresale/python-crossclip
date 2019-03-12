@@ -96,12 +96,14 @@ class GtkBackend(AbstractBackend):
     """
 
     image_converter = GtkImageConverter()
+    raw_clipboard = None
 
     def __init__(self, display=None):
         if display is None:
             display = Gdk.Display.get_default()
         super().__init__()
         self.clipboard = Gtk.Clipboard.get_default(display)
+        self.raw_clipboard = self.clipboard
 
     def get_text(self) -> str:
         """
@@ -138,6 +140,7 @@ class GtkBackend(AbstractBackend):
         """
         # Assuming that all text is to be copied over
         self.clipboard.set_text(text, num)
+        self.clipboard.store()
     
     def set_image(self, image, format='pil'):
         """
@@ -148,9 +151,11 @@ class GtkBackend(AbstractBackend):
         """
         if format == self.image_converter.image_str:
             self.clipboard.set_image(image)
+            self.clipboard.store()
         elif format == 'pil':
             pixbuf = self.image_converter.from_pillow(image)
             self.clipboard.set_image(pixbuf)
+            self.clipboard.store()
         else:
             raise RuntimeWarning('Invalid image format')
             return None
