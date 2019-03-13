@@ -2,17 +2,16 @@
 A cross platform clipboard API for python.
 
 # Current State of the Package
-Currently, this package is still in Beta. Most of the initial features are
-complete, but most of the backends are untested (the only tested backend is
-the GTK backend). A first stable release is not too far out, but it will take
-some work
+Backends are written but untested. Package needs a better test
+suite.
 
 ## Overview
 
 ### About
 Crossclip provides a standard python API for interacting with the system
-clipboard. As of now, Crossclip supports MacOS, Windows, and Gtk- and
-Qt-Based desktop environments for GNU/Linux. More environments can be added.
+clipboard. As of now, Crossclip supports MacOS, Windows, and GNU/Linux desktop
+environments using Gtk and Qt environments. More environments can be added due
+to the modular design.
 
 ### Dependencies
 
@@ -21,7 +20,7 @@ Qt-Based desktop environments for GNU/Linux. More environments can be added.
 
 #### Linux
 * Gtk users: PyGObject
-* Qt users: PyQt5
+* Qt users: PySide2
 
 #### Windows
 * pywin32
@@ -62,21 +61,19 @@ backend_text = cb.backend.get_text()
 ```
 
 It's as easy as that. The frontend wraps all of the backend specifics and
-provides a simple and uniform interface.
+provides a simple, uniform interface.
 
 ## Implementation Details
 This library uses a collection of backends to provide clipboard functionality
 for a specific system or clipboard. For example, there is a clipboard backend
 for the Windows system clipboard and the Gtk+ clipboard. Each backend inherits
-from an abstract class (interface?) that provides a set of common abstract
-functions that each backend should implement.
+from an abstract base class that provides a set of common abstract methods that
+each backend must implement.
 
-Each of these backends are used in the frontend class, clipboard.Clipboard.
-The Clipboard class determines the backend to use based on the system platform
-determined by the `sys.platform` value. It has the same functions layed out by
-the `BaseBackend` class, but implements the interface differently. The Clipboard
-class carries an instance of the backend and uses its functions to provide
-clipboard functionality.
+Each of these backends are used in the frontend class, `clipboard.Clipboard`.
+The `Clipboard` class determines the backend to use based on the system platform
+determined by the `sys.platform` value. The Clipboard class carries an instance
+of the backend and uses its functions to provide clipboard functionality.
 
 With a design like this, the library is extensible. New backends can be added
 and removed.
