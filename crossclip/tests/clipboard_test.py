@@ -2,7 +2,7 @@
 import unittest
 import sys
 from ..clipboard import Clipboard
-from .. import platform_backend 
+from .. import platform_backend
 from PIL import Image as PilImage
 from PIL import ImageChops as PilImageChops
 import numpy
@@ -26,8 +26,6 @@ class GtkTestCase(unittest.TestCase):
         # Create clipboard. Make sure that it is valid
         self.clipboard = Clipboard()
         self.assertTrue(self.clipboard is not None)
-        # self.assertTrue(self.clipboard.backend_type is GtkBackend)
-        # self.assertTrue(self.clipboard.image_str == 'gdk')
 
     def test_text(self):
         # Test putting text onto the clipboard
@@ -50,7 +48,7 @@ class GtkTestCase(unittest.TestCase):
         new_image = self.clipboard.get_image()
         self.assertTrue(
             eval_images(test_image, new_image)
-        ) 
+        )
 
 @unittest.skipUnless(platform_backend == 'qt', 'Not using Qt backend')
 class QtTestCase(unittest.TestCase):
@@ -59,8 +57,6 @@ class QtTestCase(unittest.TestCase):
         # Create clipboard. Make sure that it is valid
         self.clipboard = Clipboard()
         self.assertTrue(self.clipboard is not None)
-        self.assertTrue(self.clipboard.backend_type is QtBackend)
-        self.assertTrue(self.clipboard.image_str == 'qt')
 
     def test_text(self):
         # Test putting text onto the clipboard
@@ -92,8 +88,6 @@ class WinTestCase(unittest.TestCase):
         # Create clipboard. Make sure that it is valid
         self.clipboard = Clipboard()
         self.assertTrue(self.clipboard is not None)
-        self.assertTrue(self.clipboard.backend_type is WindowsBackend)
-        self.assertTrue(self.clipboard.image_str == 'pil')
 
     def test_text(self):
         # Test putting text onto the clipboard
