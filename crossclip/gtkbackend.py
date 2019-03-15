@@ -38,6 +38,7 @@ class GtkImageConverter(AbstractImageConverter):
     def image_type(self):
         """
         Returns the type of image that this converter uses.
+
         :returns: GdkPixbuf.Pixbuf type (not object!)
         """
         return GdkPixbuf.Pixbuf
@@ -46,6 +47,7 @@ class GtkImageConverter(AbstractImageConverter):
     def image_str(self):
         """
         Returns a string representation of what the object is.
+
         :returns str: 'gdk-pixbuf'
         """
         return 'gdk-pixbuf'
@@ -53,6 +55,7 @@ class GtkImageConverter(AbstractImageConverter):
     def to_pillow(self, pixbuf):
         """
         Converts and image of `self.image_type` to a `PIL.Image`.
+
         :param pixbuf: GdkPixbuf.Pixbuf image
         :returns PIL.Image: Converted Pillow Image
         """
@@ -68,6 +71,7 @@ class GtkImageConverter(AbstractImageConverter):
     def from_pillow(self, image):
         """
         Converts a `PIL.Image` to a `GdkPixbuf.Pixbuf`.
+
         :param image: `PIL.Image` to be convered
         :returns GdkPixbuf.Pixbuf: Converted pixbuf
         """
@@ -108,6 +112,7 @@ class GtkBackend(AbstractBackend):
     def get_text(self) -> str:
         """
         Synchronously gets text from clipboard.
+
         :return str: Text from clipboard
         """
         text = self.clipboard.wait_for_text()
@@ -117,6 +122,7 @@ class GtkBackend(AbstractBackend):
         """
         Synchronously gets image from clipboard. The image is either
         a pillow image, or a GdkPixbuf.Pixbuf.
+
         :param format: Format of image. 'pil' for pillow, 'gdk-pixbuf' for gdk pixbuf (default: 'pil')
         :returns PIL.Image or GdkPixbuf.Pixbuf: Image in chosen format
         :raises RuntimeWarning: If format is invalid format
@@ -135,6 +141,7 @@ class GtkBackend(AbstractBackend):
     def set_text(self, text: str, num=-1):
         """
         Synchronously sets text to clipboard
+
         :param text: text to set to clipboard
         :param num: length of text to set. If -1, all text is copied (default: -1)
         """
@@ -145,6 +152,7 @@ class GtkBackend(AbstractBackend):
     def set_image(self, image, format='pil'):
         """
         Synchronously sets image to clipboard.
+
         :param image: Some image object
         :param format: format of image
         :raises RuntimeWarning: If format is invalid

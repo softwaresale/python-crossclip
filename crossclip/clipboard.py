@@ -29,15 +29,23 @@ class Clipboard:
     is.
     """
     backend_type = None
+    """ Type object of backend.
+    """
     backend = None
+    """ Actual backend instance
+    """
     image_converter = None
+    """ Image converter instance
+    """
 
-    def __init__(self, clip_backend=platform_backend):
+    def __init__(self, clip_backend=backends[platform_backend]):
         """
         Creates a new clipboard that interfaces one of the platform-specific
         backends. The backend is implicitly deduced, but a specific backend
         can be choosen instead.
+
         :param clip_backend: Which backend to use. Defaults to implicitly-selected backend
+        :type clip_backend: instance of `AbstractBackend`
         :raises RuntimeError: If clip_backend is invalid
         """
         # Choose the backend to use
@@ -50,19 +58,24 @@ class Clipboard:
         # Based off of backend, get the native image type (e.g QImage)
         self.image_converter = self.backend.image_converter
 
-    def get_text(self) -> str:
+    def get_text(self):
         """
         Gets text from the clipboard.
-        :returns str: Text from clipboard or None if no text is available
+
+        :returns: Text from clipboard or None if no text is available
+        :rtype: str
         """
         return self.backend.get_text()
 
     def get_image(self, native=False):
         """
         Gets an image from the clipboard.
+
         :param native: If true, then the returned image will be of type `self.image_converter.image_type`.
                         If False, then object will be of type `PIL.Image`.
-        :returns `PIL.Image` or `self.image_converter.image_type`: Initialized image object or None if no image is available
+        :type native: boolean
+        :returns: Initialized image object or None if no image is available
+        :rtype: `PIL.Image` or `self.image_converter.image_type`
         """
         if native is True:
             return self.backend.get_image(format=self.image_converter.image_str)
@@ -72,15 +85,19 @@ class Clipboard:
     def set_text(self, text: str):
         """
         Places text on the clipboard.
+
         :param text: Text to add
+        :type text: str
         """
         self.backend.set_text(text)
 
     def set_image(self, image):
         """
         Sets an image on the clipboard. Image can either be of type `PIL.Image` or
-        `self.image_converter.image_str`.
+        `self.image_converter.image_type`.
+
         :param image: image to be placed.
+        :type image: instance of `PIL.Image` or `self.image_converter.image_type`
         :raises RuntimeError: If image is neither of type `PIL.Image` nor `self.image_converter.image_type`
         """
         if isinstance(image, self.image_converter.image_type):
@@ -89,3 +106,4 @@ class Clipboard:
             self.backend.set_image(image)
         else:
             raise RuntimeError('Image must be of type `PIL.Image` or `self.image_converter.image_str`')
+

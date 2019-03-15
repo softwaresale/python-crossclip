@@ -10,6 +10,7 @@ Welcome to Crossclip's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api/crossclip.rst
 
 
 Indices and tables
