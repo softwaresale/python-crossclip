@@ -32,12 +32,12 @@ if sys.platform == 'linux':
         # USE GTK AS BACKEND
         platform_backend = 'gtk'
         from .gtkbackend import GtkBackend
-        backends['gtk'] = GtkBackend()
+        backends['gtk'] = GtkBackend
     elif current_desktop in ['LXQt', 'KDE', ]:
         # USE QT AS BACKEND
         platform_backend = 'qt'
         from .qtbackend import QtBackend
-        backends['qt'] = QtBackend()
+        backends['qt'] = QtBackend
     else:
         raise RuntimeError('Not using a GTK or Qt-based Desktop')
 
@@ -55,7 +55,7 @@ elif sys.platform == 'win32':
     try:
         platform_backend = 'win'
         from .winbackend import WindowsBackend
-        backends['win'] = WindowsBackend()
+        backends['win'] = WindowsBackend
     except ModuleNotFoundError:
         raise RuntimeError("You need pywin32 to run on windows")
 else:

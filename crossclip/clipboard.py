@@ -38,7 +38,7 @@ class Clipboard:
     """ Image converter instance
     """
 
-    def __init__(self, clip_backend=backends[platform_backend]):
+    def __init__(self, clip_backend_type=backends[platform_backend]):
         """
         Creates a new clipboard that interfaces one of the platform-specific
         backends. The backend is implicitly deduced, but a specific backend
@@ -49,11 +49,11 @@ class Clipboard:
         :raises RuntimeError: If clip_backend is invalid
         """
         # Choose the backend to use
-        if clip_backend not in backends:
-            raise RuntimeError('Invalid backend selected')
+        #if clip_backend not in backends:
+        #    raise RuntimeError('Invalid backend selected')
 
-        self.backend = backends[clip_backend]
-        self.backend_type = clip_backend
+        self.backend = clip_backend_type()
+        self.backend_type = clip_backend_type
 
         # Based off of backend, get the native image type (e.g QImage)
         self.image_converter = self.backend.image_converter
