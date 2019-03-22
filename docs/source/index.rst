@@ -6,6 +6,9 @@
 Welcome to Crossclip's documentation!
 =====================================
 
+Crossclip is a cross-platform python library for interacting with the clipboard.
+It supports copying and pasting both images and text.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

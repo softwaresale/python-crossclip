@@ -1,13 +1,6 @@
 crossclip package
 =================
 
-Subpackages
------------
-
-.. toctree::
-
-    crossclip.tests
-
 Submodules
 ----------
 
