@@ -19,6 +19,7 @@
 
 import sys
 from . import platform_backend, backends
+from .absbackend import AbstractBackend
 import PIL
 
 class Clipboard:
@@ -52,6 +53,10 @@ class Clipboard:
         #if clip_backend not in backends:
         #    raise RuntimeError('Invalid backend selected')
 
+        # Verify validity of backend type
+        if not issubclass(clip_backend_type, AbstractBackend):
+            raise RuntimeError("Clipboard backend is of invalid type")
+
         self.backend = clip_backend_type()
         self.backend_type = clip_backend_type
 
@@ -67,7 +72,7 @@ class Clipboard:
         """
         return self.backend.get_text()
 
-    def get_image(self, native=False):
+    def get_image(self, form='pil', converter=None):
         """
         Gets an image from the clipboard.
 
@@ -77,10 +82,7 @@ class Clipboard:
         :returns: Initialized image object or None if no image is available
         :rtype: `PIL.Image` or `self.image_converter.image_type`
         """
-        if native is True:
-            return self.backend.get_image(format=self.image_converter.image_str)
-        else:
-            return self.backend.get_image()
+        return self.backend.get_image(form, converter)
 
     def set_text(self, text: str):
         """
@@ -100,10 +102,4 @@ class Clipboard:
         :type image: instance of `PIL.Image` or `self.image_converter.image_type`
         :raises RuntimeError: If image is neither of type `PIL.Image` nor `self.image_converter.image_type`
         """
-        if isinstance(image, self.image_converter.image_type):
-            self.backend.set_image(image, format=self.image_converter.image_str)
-        elif isinstance(image, PIL.Image.Image):
-            self.backend.set_image(image)
-        else:
-            raise RuntimeError('Image must be of type `PIL.Image` or `self.image_converter.image_str`')
-
+        self.backend.set_image(image)

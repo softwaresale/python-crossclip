@@ -52,12 +52,10 @@ class AbstractBackend(ABC):
         pass
 
     @abstractmethod
-    def set_image(self, img, form):
+    def set_image(self, img):
         """ Sets image to clipboard
         :param img: Image to set to clipboard
         :type img:
-        :param form: Format of image
-        :type form: str
         """
         pass
 

@@ -28,6 +28,7 @@ except ModuleNotFoundError:
     print("pygobject cannot be found. Please install the pip package: 'pygobject'")
 
 from PIL import Image as PilImage
+from PIL.Image import Image as PilImageType
 from io import BytesIO
 
 from .absbackend import AbstractBackend, AbstractImageConverter
@@ -59,6 +60,10 @@ class GtkImageConverter(AbstractImageConverter):
         :param pixbuf: GdkPixbuf.Pixbuf image
         :returns PIL.Image: Converted Pillow Image
         """
+        # Sanity check to make sure that pixbuf isn't already a Pillow Image
+        if isinstance(pixbuf, PilImageType):
+            return pixbuf
+
         data = pixbuf.get_pixels()
         w = pixbuf.props.width
         h = pixbuf.props.height
@@ -75,11 +80,16 @@ class GtkImageConverter(AbstractImageConverter):
         :param image: `PIL.Image` to be convered
         :returns GdkPixbuf.Pixbuf: Converted pixbuf
         """
+
         # data = image.tobytes()
         # w, h = image.size
         # data = GLib.Bytes.new(data)
         # pix = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
         # return pix
+        # Sanity check to verify that image isn't already native type
+        if isinstance(image, self.image_type):
+            return image
+
         ibuf = BytesIO()
         image.save(ibuf, format='png')
         loader = GdkPixbuf.PixbufLoader.new_with_mime_type('image/png')
@@ -109,7 +119,7 @@ class GtkBackend(AbstractBackend):
         self.clipboard = Gtk.Clipboard.get_default(display)
         self.raw_clipboard = self.clipboard
 
-    def get_text(self) -> str:
+    def get_text(self):
         """
         Synchronously gets text from clipboard.
 
@@ -118,7 +128,7 @@ class GtkBackend(AbstractBackend):
         text = self.clipboard.wait_for_text()
         return text
 
-    def get_image(self, format='pil'):
+    def get_image(self, format='pil', converter=None):
         """
         Synchronously gets image from clipboard. The image is either
         a pillow image, or a GdkPixbuf.Pixbuf.
@@ -130,15 +140,19 @@ class GtkBackend(AbstractBackend):
         pixbuf = self.clipboard.wait_for_image()
         if pixbuf is None:
             return None
+
         if format == self.image_converter.image_str:
             return pixbuf
         elif format == 'pil':
             return self.image_converter.to_pillow(pixbuf)
         else:
-            raise RuntimeWarning('Image format is not supported')
-            return None
-            
-    def set_text(self, text: str, num=-1):
+            if converter is not None and isinstance(converter, AbstractImageConverter):
+                pil = self.image_converter.to_pillow(pixbuf)
+                return converter.from_pillow(pil)
+            else:
+                raise RuntimeWarning("Invalid format, and converter is not provided")
+
+    def set_text(self, text, num=-1):
         """
         Synchronously sets text to clipboard
 
@@ -148,8 +162,8 @@ class GtkBackend(AbstractBackend):
         # Assuming that all text is to be copied over
         self.clipboard.set_text(text, num)
         self.clipboard.store()
-    
-    def set_image(self, image, format='pil'):
+
+    def set_image(self, image, converter=None):
         """
         Synchronously sets image to clipboard.
 
@@ -157,13 +171,30 @@ class GtkBackend(AbstractBackend):
         :param format: format of image
         :raises RuntimeWarning: If format is invalid
         """
-        if format == self.image_converter.image_str:
-            self.clipboard.set_image(image)
-            self.clipboard.store()
-        elif format == 'pil':
+        # if format == self.image_converter.image_str:
+        #     self.clipboard.set_image(image)
+        #     self.clipboard.store()
+        # elif format == 'pil':
+        #     pixbuf = self.image_converter.from_pillow(image)
+        #     self.clipboard.set_image(pixbuf)
+        #     self.clipboard.store()
+        # else:
+        #     raise RuntimeWarning('Invalid image format')
+        #     return None
+        if isinstance(image, PilImageType):
+            # If image is a pillow image, then it needs to be converted
             pixbuf = self.image_converter.from_pillow(image)
             self.clipboard.set_image(pixbuf)
             self.clipboard.store()
+        elif isinstance(image, self.image_converter.image_type):
+            # Image is already native type, good to go
+            self.clipboard.set_image(pixbuf)
+            self.clipboard.store()
         else:
-            raise RuntimeWarning('Invalid image format')
-            return None
+            # If a converter is provided, then use it to convert the image to a
+            # Pillow object and recursively run the method.
+            if converter is not None and isinstance(converter, AbstractImageConverter):
+                pillow_img = converter.to_pillow(image)
+                self.set_image(pillow_img)
+            else:
+                raise RuntimeWarning("Image is of invalid type and has no converter")
