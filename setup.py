@@ -7,7 +7,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name="crossclip",
-    version="0.2.0",
+    version="0.2.2",
     author="Charlie Sale",
     author_email="softwaresale01@gmail.com",
     description="A Cross Platform clipboard manager",

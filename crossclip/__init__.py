@@ -39,7 +39,16 @@ if sys.platform == 'linux':
         from .qtbackend import QtBackend
         backends['qt'] = QtBackend
     else:
-        raise RuntimeError('Not using a GTK or Qt-based Desktop')
+        # This block checks to see if using the Xfce4 desktop
+        try:
+            pipe = os.popen('xprop -root _DT_SAVE_MODE')
+            if ' = "xfce4"' in pipe.read():
+                platform_backend = 'gtk'
+                from .gtkbackend import GtkBackend
+                backends['gtk'] = GtkBackend
+            pipe.close()
+        except (OSError, RuntimeError):
+            raise RuntimeError('Not using a GTK or Qt-based Desktop')
 
 elif sys.platform == 'darwin':
     try:
