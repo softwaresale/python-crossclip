@@ -31,7 +31,7 @@ from PIL import Image as PilImage
 from PIL.Image import Image as PilImageType
 from io import BytesIO
 
-from .absbackend import AbstractBackend, AbstractImageConverter
+from .absbackend import AbstractBackend, AbstractImageConverter, AbstractClipboardListener
 
 class GtkImageConverter(AbstractImageConverter):
 
@@ -101,6 +101,44 @@ class GtkImageConverter(AbstractImageConverter):
         else:
             return None
 
+
+class GtkClipboardListener(AbstractClipboardListener):
+
+    def __init__(self, clipboard=None):
+        if clipboard is None:
+            super().__init__(clipboard)
+
+        # Make sure that clipboard is a Gtk clipboard
+        if isinstance(clipboard.backend, GtkBackend):
+            super().__init__(clipboard)
+        else:
+            super().__init__(None)
+
+    async def start(self, handler=None):
+        """ Starts listening for events
+
+        This starts the Gtk event loop and starts listening for clipboard
+        events. This is a coroutine, so run it accordingly. You can use
+        ClipboardListener.run_listener to run it as a task.
+        :param handler_type: handler instance
+        :type handler_type: subclass of AbstractEvent
+        """
+
+        if handler is not None:
+            self.handler = handler
+
+        # Connects the clipboard 'owner-change' signal to a callable instance
+        # of `handler_type`.
+        self.clipboard.backend.connect('owner-change', self.handler)
+
+        # Start main loop
+        try:
+            Gtk.main()
+        except asyncio.CancelledError:
+            Gtk.main_quit()
+            raise
+
+
 class GtkBackend(AbstractBackend):
     """ Gtk Clipboard backend
 
@@ -111,12 +149,18 @@ class GtkBackend(AbstractBackend):
 
     image_converter = GtkImageConverter()
     raw_clipboard = None
+    raw_clipboard_type = Gtk.Clipboard
+    listener_type = GtkClipboardListener
 
-    def __init__(self, display=None):
+    def __init__(self, instance=None, display=None):
         if display is None:
             display = Gdk.Display.get_default()
         super().__init__()
-        self.clipboard = Gtk.Clipboard.get_default(display)
+        # Set backend to an already init'd instance
+        if instance is None:
+            self.clipboard = Gtk.Clipboard.get_default(display)
+        else:
+            self.clipboard = instance
         self.raw_clipboard = self.clipboard
 
     def get_text(self):

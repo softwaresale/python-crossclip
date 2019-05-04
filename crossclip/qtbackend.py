@@ -47,14 +47,20 @@ class QtBackend(AbstractBackend):
     This class backends the default Qt Clipboard
     """
     image_converter = QtImageConverter
+    raw_clipboard = None
 
-    def __init__(self):
+    def __init__(self, instance=None):
         # Get the default application. I am ignoring any sort
         # of signal/slot setup. This will all be based off of user
         # actions
         super().__init__()
         self.app = QApplication([])
-        self.clipboard = self.app.clipboard()
+        if instsance is None:
+            self.clipboard = self.app.clipboard()
+        else:
+            self.clipboard = instance
+
+        self.raw_clipboard = self.clipboard
 
     def get_text(self):
         return self.clipboard.text()

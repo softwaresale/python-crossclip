@@ -21,6 +21,7 @@ import sys
 import os
 from abc import ABC, abstractmethod, abstractstaticmethod, abstractproperty
 
+
 class AbstractBackend(ABC):
     """ Interface for all clipboard backends
 
@@ -87,4 +88,53 @@ class AbstractImageConverter(ABC):
     def from_pillow(self, pil):
         """ Converts a pillow image to native type
         """
+        pass
+
+class AbstractClipboardListener(ABC):
+
+    @staticmethod
+    def run_listener(listener, handler_type=None):
+        """ Runs an instantiated listener.
+
+        Runs a clipboard listener as a task.
+        :param listener: Instantiated listener instance
+        :type listener: ClipboardListener
+        :param handler_type: Type of event handler. Note: NOT AN INSTANCE
+        :type handler_type: subclass of AbstractEvent
+        :return: Created coroutine task
+        :rtype: asyncio.Task
+        """
+        return asyncio.create_task(listener.start(handler_type))
+
+    def __init__(self, clipboard=None):
+        """ Create a new listener
+
+        Create a new clipboard listener. You can wrap it around
+        a new or existing clipboard.
+        :param clipboard: Clipboard instance (default None)
+        :type clipboard: crossclip.clipboard.Clipboard
+        """
+        self._handler = None
+        if clipboard is None:
+            self.clipboard = Clipboard()
+        else:
+            self.clipboard = clipboard
+
+    @property
+    def handler(self):
+        """ Event handler type.
+        """
+        return self._handler
+
+    @handler_type.setter
+    def handler_type(self, new_handler):
+        if isinstance(new_handler, AbstractEvent):
+            self._handler = new_handler
+            return true
+        else:
+            self._handler_type = None
+            return false
+
+    @abstractmethod
+    async def start(self, handler=None):
         pass
