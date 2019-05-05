@@ -19,7 +19,7 @@
 
 import sys
 from . import platform_backend, backends
-from .absbackend import AbstractBackend, AbstractClipboardListener, AbstractImageConverter
+from .absbackend import AbstractBackend, AbstractImageConverter
 import PIL
 
 class Clipboard:
@@ -58,48 +58,20 @@ class Clipboard:
         else:
             return None
 
-    @property
-    def listener_type(self):
-        if issubclass(self._listener_type, AbstractClipboardListener):
-            return self._listener_type
-        else:
-            return None
-
-    @listener_type.setter
-    def listener_type(self, new_type):
-        if issubclass(new_type, AbstractClipboardListener):
-            self._listener_type = new_type
-        else:
-            return None
-
-    @property
-    def listener(self):
-        if isinstance(self._listener, AbstractBackend):
-            return self._listener
-        else:
-            return None
-
-    @listener.setter
-    def listener(self, new_listener):
-        if isinstance(new_listener, AbstractClipboardListener):
-            self._listener = new_listener
-        else:
-            return None
-
     image_converter = None
     """ Image converter instance
     """
 
     @staticmethod
     def from_clipboard_instance(raw_instance):
-        if isinstance(raw_instance, backends['gtk']):
-            return Clipboard(backends['gtk'], raw_instance)
-        elif isinstance(raw_instance, backends['qt']):
-            return Clipboard(backends['qt'], raw_instance)
+        if isinstance(raw_instance, backends['gtk']['backend']):
+            return Clipboard(backends['gtk']['backend'], raw_instance)
+        elif isinstance(raw_instance, backends['qt']['backend']):
+            return Clipboard(backends['qt']['backend'], raw_instance)
         else:
             return None
 
-    def __init__(self, clip_backend_type=backends[platform_backend], instance=None):
+    def __init__(self, clip_backend_type=backends[platform_backend]['backend'], instance=None):
         """
         Creates a new clipboard that interfaces one of the platform-specific
         backends. The backend is implicitly deduced, but a specific backend
@@ -122,16 +94,6 @@ class Clipboard:
 
         # Based off of backend, get the native image type (e.g QImage)
         self._image_converter = self.backend.image_converter
-
-        # Set the listener type
-        self._listener_type = self.backend.listener_type
-
-        # Set the listener instance to None
-        self._listener = None
-
-    def __del__(self):
-        # Clean up listeners if not already done
-        self.stop_listener()
 
     def get_text(self):
         """
@@ -173,23 +135,3 @@ class Clipboard:
         :raises RuntimeError: If image is neither of type `PIL.Image` nor `self.image_converter.image_type`
         """
         self.backend.set_image(image)
-
-    def start_listener(self, event_handler):
-        """ Start a clipboard event monitor
-
-        This method starts a new clipboard event listener. Once this is started, it will
-        monitor any clipboard events and handle them with the event_handler.
-        :param event_handler: Event to handle
-        :type event_handler: AbstractEvent
-        """
-        listener_instance = self.listener_type(self)
-        self.listener = AbstractClipboardListener.run_listener(listener_instance, event_handler)
-
-    def stop_listener(self):
-        """ Stops the event monitor
-
-        If it hasn't already been stopped. This method stops the event
-        monitor.
-        """
-        if not self.listener.cancelled() and not self.listener.done():
-            self.listener.cancel()

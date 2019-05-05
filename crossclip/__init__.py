@@ -31,21 +31,30 @@ if sys.platform == 'linux':
     if current_desktop in ['MATE', 'GNOME', 'X-Cinnamon', 'LXDE', 'XFCE', 'Unity']:
         # USE GTK AS BACKEND
         platform_backend = 'gtk'
-        from .gtkbackend import GtkBackend
-        backends['gtk'] = GtkBackend
+        from .gtkbackend import GtkBackend, GtkClipboardListener
+        backends['gtk'] = {
+            'backend': GtkBackend,
+            'listener': GtkClipboardListener
+        }
     elif current_desktop in ['LXQt', 'KDE', ]:
         # USE QT AS BACKEND
         platform_backend = 'qt'
         from .qtbackend import QtBackend
-        backends['qt'] = QtBackend
+        backends['qt'] = {
+            'backend': QtBackend,
+            'listener': None
+        }
     else:
         # This block checks to see if using the Xfce4 desktop
         try:
             pipe = os.popen('xprop -root _DT_SAVE_MODE')
             if ' = "xfce4"' in pipe.read():
                 platform_backend = 'gtk'
-                from .gtkbackend import GtkBackend
-                backends['gtk'] = GtkBackend
+                from .gtkbackend import GtkBackend, GtkClipboardListener
+                backends['gtk'] = {
+                    'backend': GtkBackend,
+                    'listener': GtkClipboardListener
+                }
             pipe.close()
         except (OSError, RuntimeError):
             raise RuntimeError('Not using a GTK or Qt-based Desktop')
@@ -64,7 +73,10 @@ elif sys.platform == 'win32':
     try:
         platform_backend = 'win'
         from .winbackend import WindowsBackend
-        backends['win'] = WindowsBackend
+        backends['win'] = {
+            'backend': WindowsBackend,
+            'listener': None
+        }
     except ModuleNotFoundError:
         raise RuntimeError("You need pywin32 to run on windows")
 else:

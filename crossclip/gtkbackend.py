@@ -31,7 +31,8 @@ from PIL import Image as PilImage
 from PIL.Image import Image as PilImageType
 from io import BytesIO
 
-from .absbackend import AbstractBackend, AbstractImageConverter, AbstractClipboardListener
+from .absbackend import AbstractBackend, AbstractImageConverter
+from .events import AbstractClipboardListener
 
 class GtkImageConverter(AbstractImageConverter):
 
@@ -129,7 +130,7 @@ class GtkClipboardListener(AbstractClipboardListener):
 
         # Connects the clipboard 'owner-change' signal to a callable instance
         # of `handler_type`.
-        self.clipboard.backend.connect('owner-change', self.handler)
+        self.clipboard.backend.raw_clipboard.connect('owner-change', self.handler)
 
         # Start main loop
         try:
@@ -150,7 +151,6 @@ class GtkBackend(AbstractBackend):
     image_converter = GtkImageConverter()
     raw_clipboard = None
     raw_clipboard_type = Gtk.Clipboard
-    listener_type = GtkClipboardListener
 
     def __init__(self, instance=None, display=None):
         if display is None:
